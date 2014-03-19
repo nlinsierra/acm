@@ -1,0 +1,145 @@
+#include <iostream>
+
+using namespace std;
+
+int n = 0;
+int ranges[201000];
+int killed = 0, last_killed = 0, cur_dragon_idx = 0, killed_dragon_idx = 0;
+
+
+struct Dragon {
+	int idx;
+	int gold;
+	bool is_killed;
+	int range;
+};
+
+Dragon dragons[201000];
+Dragon killed_dragons[201000];
+
+int cmp(const void* d1, const void* d2) {
+	if (((Dragon*)d1)->gold > ((Dragon*)d2)->gold) return 1;
+	if (((Dragon*)d1)->gold < ((Dragon*)d2)->gold) return -1;
+	return 0;
+}
+
+int cmp_idx(const void* d1, const void* d2) {
+	if (((Dragon*)d1)->idx > ((Dragon*)d2)->idx) return 1;
+	if (((Dragon*)d1)->idx < ((Dragon*)d2)->idx) return -1;
+	return 0;
+}
+
+void setRanges(int idx, int ranges_count) {
+	for (int i = idx; i < ranges_count - 1; ++i) --ranges[i];
+	for (int i = idx - 1; i >= 0; --i) if (ranges[i] > ranges[idx]) ranges[i] = ranges[idx];
+}
+
+int killDragon(int dragons_count, int ranges_count) {
+	for (int i = cur_dragon_idx; i >= 0; --i) {
+		if (!dragons[i].is_killed && ranges[dragons[i].range] != 1) {
+			dragons[i].is_killed = true;
+			setRanges(dragons[i].range, ranges_count);
+			//--ranges[dragons[i].range];
+			++killed;
+			cur_dragon_idx = i;
+			//killed_dragons[killed_dragon_idx++] = dragons[i];
+			return dragons[i].gold;
+		}
+	}
+	return -1;
+}
+
+int killLastDragons(int dragons_count, int ranges_count) {
+	int i = dragons_count - 1, sum = 0;
+	while (i >= 0 && dragons[i].range == ranges_count - 1) {
+		sum += dragons[i].gold;
+		dragons[i].is_killed = true;
+		killed_dragons[killed_dragon_idx++] = dragons[i];
+		++last_killed;
+		--i;
+	}
+	return sum;
+}
+
+void unkillDragons(int ranges_count) {
+	int j = 0, killed_idx = 0, killed_count = 0;	
+	for(int i = 0; i < ranges_count - 1; ++i) {
+		while (killed_dragons[j].range == i) ++j;
+
+		if (j >= ranges[i]) {
+			qsort(killed_dragons, j, sizeof(Dragon), cmp);
+			int jj = 0;
+			while (j-- >= ranges[i]) {
+				killed_dragons[jj++].is_killed = false;
+				--killed;
+			}
+		}
+	}
+}
+
+int main() {
+	int ranges_count = 0, dragons_count = 0;
+	int gold_sum = 0;
+
+	freopen("input.txt", "r", stdin);
+	freopen("output.txt", "w", stdout);
+
+	//cin >> n;
+	scanf("%d\n", &n);
+	for (int i = 2; i <= n; ++i) {
+		char c;
+		int w = 0;
+		scanf("%c %d\n", &c, &w);
+		//cin >> c >> w;
+		if (c == 'd') {
+			dragons[dragons_count].idx = i;
+			dragons[dragons_count].is_killed = false;
+			dragons[dragons_count].range = ranges_count;
+			dragons[dragons_count].gold = w;
+			++dragons_count;
+		}
+		else if (c == 'p') {
+			ranges[ranges_count] = w;
+			++ranges_count;
+		}
+	}
+
+	gold_sum += killLastDragons(dragons_count, ranges_count);
+
+	qsort(dragons, dragons_count - last_killed, sizeof(Dragon), cmp);
+
+	for (int i = ranges_count - 3; i >= 0; --i) {
+		if (ranges[i] > ranges[i + 1]) ranges[i] = ranges[i + 1];
+	}
+
+	int cur_range = ranges[ranges_count - 2];
+	cur_dragon_idx = dragons_count - 1 - last_killed;
+
+	while (killed < cur_range) {
+		if (killed == cur_range - 1) break;
+		int cur_gold = killDragon(dragons_count, ranges_count);
+		if (cur_gold != -1) {
+			gold_sum += cur_gold;
+		}
+		else break;
+	}
+
+	killed += last_killed;
+	//killed = killed_dragon_idx;
+	qsort(dragons, dragons_count, sizeof(Dragon), cmp_idx);
+	//qsort(killed_dragons, killed_dragon_idx, sizeof(Dragon), cmp_idx);
+	//unkillDragons(ranges_count);
+
+	if (killed < ranges[ranges_count - 1]) cout << -1 << endl;
+	else {
+		//cout << gold_sum << endl << killed << endl;
+		printf("%d\n%d\n", gold_sum, killed);
+		
+		
+
+		for (int i = 0; i < dragons_count; ++i) if (dragons[i].is_killed) cout << dragons[i].idx << " ";
+		//for (int i = 0; i < killed_dragon_idx; ++i) if (killed_dragons[i].is_killed) printf("%d ", dragons[i].idx);
+	}
+	
+	return 0;
+}

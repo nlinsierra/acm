@@ -1,0 +1,58 @@
+#include <iostream>
+#include <map>
+#include <vector>
+#include <string>
+
+using namespace std;
+
+#define MAXLEN 15
+#define MAXN 50001
+
+map<string, vector<int>> objects;
+int n = 0, m = 0;
+
+int cmp(const void* d1, const void* d2) {
+	if ((*(int*)d1) > (*(int*)d2)) return -1;
+	if ((*(int*)d1) < (*(int*)d2)) return 1;
+	return 0;
+}
+
+int main() {
+	freopen("input.txt", "r", stdin);
+	freopen("output.txt", "w", stdout);	
+
+	scanf("%d\n", &n);
+	for (int i = 0; i < n; ++i) {
+		int ki = 0;
+		scanf("%d ", &ki);
+		for (int k = 0; k < ki; ++k) {
+			char *str = new char[MAXLEN];
+			scanf("%s", str);
+			string sstr(str);
+			objects[sstr].push_back(i + 1);
+		}
+	}
+
+	scanf("%d\n", &m);
+	for (int i = 0; i < m; ++i) {
+		int li = 0;
+		scanf("%d ", &li);
+		int cnt = 0, *a = (int*)calloc(MAXN, sizeof(int));
+		for (int l = 0; l < li; ++l) {
+			char *str = new char[MAXLEN];
+			scanf("%s", str);
+			string sstr(str);
+			for (int j = 0; j < objects[sstr].size(); ++j) a[objects[sstr][j]]++;
+		}
+		qsort(a, MAXN, sizeof(int), cmp);
+		for (int j = 0; j < MAXN; ++j) {
+			if (a[j] <= 0) break;
+			if (a[j] == li) ++cnt;
+		}
+		free(a);
+		printf("%d\n", cnt);		
+	}
+
+
+	return 0;
+}
